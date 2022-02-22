@@ -146,11 +146,17 @@ if __name__ == "__main__":
               'chocolate', 'magenta', 'teal', 'fuchsia', 'lavender', 'olive', 'lightgreen', 'tan', 'violet',
               'salmon', 'indigo']
     costs = {}
-
+    actualPlans = {
+        0: [0, 0.05, 0.08, 0.111, 0.131, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
+        1: [0, 0.05, 0.08, 0.111, 0.131, 0.15, 0.18, 0.22, 0.23, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24, 0.24],
+        2: [0, 0.05, 0.08, 0.111, 0.131, 0.15, 0.18, 0.22, 0.23, 0.30, 0.35, 0.39, 0.40, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42],
+        3: [0, 0.05, 0.08, 0.111, 0.131, 0.15, 0.18, 0.22, 0.24, 0.30, 0.35, 0.39, 0.40, 0.42, 0.51, 0.60, 0.70, 0.79, 0.91, 1.0]
+    }
     draw_difference(list(range(N)), plan[0:N], colors[0], 'Плановые показатели')
     currentBudget[0] = budget
 
     while currentStage < (N - 1):
+        planFact = actualPlans[countWorkers]
         countWorkers += 1
         currentStage, lastStageDone, lastItemChange, costs, penalties, budget = process_work(lastItemChange, N_k,
                                                                                              startCost, plan,
@@ -187,4 +193,4 @@ if __name__ == "__main__":
     print('')
     print('Остатки бюджета: ', currentBudget)
     print('')
-
+    print('Изначальный план: ', plan_start)
