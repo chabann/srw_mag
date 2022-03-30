@@ -1,8 +1,5 @@
 import requests
 import json
-import numpy as np
-import pandas as pd
-from bs4 import BeautifulSoup
 from desctop_agents import get_header
 
 
@@ -47,9 +44,3 @@ class FinancialCompanyData:
         url_get_detail_report = self.urlGetDetailReport.replace('#REPORT_ID#', str(report_id))
         result = requests.get(url_get_detail_report, headers=get_header())  # отправляем HTTP запрос
         self.companyData = json.loads(result.text)[0]
-
-
-searchRequestLine = {'query': '7843311429', 'inn': '', 'name': '', 'ogrn': ''}
-financeData = FinancialCompanyData(searchRequestLine['query'])
-
-print(financeData.companyData['balance'])
