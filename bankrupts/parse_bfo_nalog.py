@@ -1,6 +1,7 @@
 import requests
 import json
 from desctop_agents import get_header
+import re
 
 
 class FinancialCompanyData:
@@ -17,24 +18,37 @@ class FinancialCompanyData:
         self.page = page
 
         self.companyData = {}
+        self.additCompanyData = {}
 
         self.send_search_request()
 
     def send_search_request(self):
         """ Метод отправляет запрос по введенным данным для поиска компании """
+        if self.inn:
+            url_search = self.urlSearch.replace('#QUERY#', self.inn + '&allFieldsMatch=false&inn=' + self.inn)
+        else:
+            url_search = self.urlSearch.replace('#QUERY#', self.query)
 
-        url_search = self.urlSearch.replace('#QUERY#', self.query).replace('#PAGE#', self.page)
+        url_search = url_search.replace('#PAGE#', self.page)
         result = requests.get(url_search, headers=get_header())  # отправляем HTTP запрос
-        legal_id = json.loads(result.text)['content'][0]['id']  # ToDo: пока что берем первую из найденных
-
-        self.send_reports_request(legal_id)
+        try:
+            take_company = json.loads(result.text)['content'][0]
+            legal_id = take_company['id']  # ToDo: пока что берем первую из найденных
+            self.send_reports_request(legal_id)
+            self.additCompanyData['name'] = take_company['shortName']
+            self.additCompanyData['okved_id'] = take_company['okved2']['id']
+            self.additCompanyData['okved_name'] = take_company['okved2']['name']
+            self.additCompanyData['inn'] = re.sub(r'[^0-9]', '', take_company['inn'])
+        except IndexError:
+            print('Не найдено данных о компании ')
+            print(json.loads(result.text))
 
     def send_reports_request(self, legal_id):
         """ Метод отправляет запрос для получения списка доступных отчетов по id компании """
 
         url_get_report = self.urlGetReport.replace('#COMPANY_ID#', str(legal_id))
         result = requests.get(url_get_report, headers=get_header())  # отправляем HTTP запрос
-        report_id = json.loads(result.text)[0]['id']  # берем последний из найденных отчетов
+        report_id = json.loads(result.text)[-1]['id']  # берем последний из найденных отчетов
 
         self.send_detail_request(report_id)
 
