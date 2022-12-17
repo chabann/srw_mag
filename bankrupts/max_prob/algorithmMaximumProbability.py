@@ -23,8 +23,8 @@ class AlgorithmMaximumProbability:
         Метод инициирует построение регрессионной модели с использованием Логит-модели
         """
 
-        res_logit = optimize.minimize(self.f_logit, self.a0, method=method, tol=1e-6,
-                                      options={'disp': True, 'maxiter': 500})
+        res_logit = optimize.minimize(self.f_logit, self.a0, method=method,
+                                      tol=1e-6, options={'disp': True, 'maxiter': 500})
 
         print('Logit:')
         print(res_logit.x)
@@ -89,12 +89,55 @@ class AlgorithmMaximumProbability:
         r2 = Errors.r2_predict(yi, y_test)
         print(f'R^2 test {method_type}: {r2}')
 
+    def predict(self, x_values, method_type):
+        if method_type == 'logit':
+            res = self.res_logit
+        else:
+            res = self.res_probit
+        theta = res.x
+
+        example_number = x_values.shape[0]
+
+        yi = []
+        for i in range(example_number):
+            if method_type == 'logit':
+                val = self.g_logit(sum([theta[j] * x_values[i][j] for j in range(self.coefficient_number)]))
+            else:
+                val = self.g_probit(sum([theta[j] * x_values[i][j] for j in range(self.coefficient_number)]))
+
+            if val > 0.5:
+                yi.append(1)
+            else:
+                yi.append(0)
+
+        return yi
+
+    def predict_proba(self, x_values, method_type):
+        if method_type == 'logit':
+            res = self.res_logit
+        else:
+            res = self.res_probit
+        theta = res.x
+
+        example_number = x_values.shape[0]
+
+        yi = []
+        for i in range(example_number):
+            if method_type == 'logit':
+                val = self.g_logit(sum([theta[j] * x_values[i][j] for j in range(self.coefficient_number)]))
+            else:
+                val = self.g_probit(sum([theta[j] * x_values[i][j] for j in range(self.coefficient_number)]))
+
+            yi.append(val)
+
+        return yi
+
     def process_probit(self, method):
         """
         Метод инициирует построение регрессионной модели с использованием Пробит-модели
         """
         res_probit = optimize.minimize(self.f_probit, self.a0, method=method,
-                                       options={'xtol': 1e-9, 'disp': True, 'maxiter': 100})
+                                       tol=1e-6, options={'disp': True, 'maxiter': 500})
 
         print('Probit:')
         print(res_probit.x)

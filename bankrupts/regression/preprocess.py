@@ -155,6 +155,6 @@ class PreprocessParseDataToUse:
         written_df.to_csv(self.target_file, index=False, header=False)
 
 
-preprocessing = PreprocessParseDataToUse('data/columns_all.csv', 'data/data(14-15).csv', 'data/data_prepare.csv')
+preprocessing = PreprocessParseDataToUse('data/columns_all.csv', 'data/data(16-17).csv', 'data/data_prepare.csv')
 preprocessing.preprocess()
 preprocessing.write('data/columns.csv')

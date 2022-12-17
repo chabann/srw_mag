@@ -4,7 +4,6 @@ from sklearn.utils import shuffle
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from imblearn.under_sampling import RandomUnderSampler
-from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import normalize
 from bankrupts.max_prob.errors import Errors
 from bankrupts.max_prob.algorithmMaximumProbability import AlgorithmMaximumProbability
@@ -126,7 +125,7 @@ df = pd.read_csv('data/data_prepare.csv', encoding='utf-8', engine='python', nam
                  delimiter=',', error_bad_lines=False)
 
 dfY = df[['Label']]
-#del df['Label']
+# del df['Label']
 
 """
 Выбираем параметры:
@@ -158,8 +157,6 @@ for size in sizeValues:
     x_train, x_test, y_train, y_test = train_test_split(dfCurSize, dfYCurSize, test_size=0.2, random_state=32)
 
     rus = RandomUnderSampler(random_state=0)
-    # rus = RandomOverSampler(random_state=0)
-
     x_train, y_train = rus.fit_resample(x_train, y_train)
 
     x_train, y_train = shuffle(x_train, y_train, random_state=24)
@@ -169,21 +166,24 @@ for size in sizeValues:
     x_test = x_test.to_numpy()
     y_test = y_test.to_numpy()
 
-    classifier = Pipeline(
-        [('scaler', StandardScaler()), ('svc', SVC(C=2, kernel='rbf', degree=3, gamma='auto', probability=True,
-                                                   class_weight='balanced'))])
+    maxProb = AlgorithmMaximumProbability(x_train, y_train)
 
-    model = classifier.fit(x_train, y_train)
+    resultProbit = maxProb.process_probit('Nelder-Mead')
+    # LnProbit = - resultProbit.fun
+    maxProb.get_result('probit')
 
-    """classifier = SVC()
-    classifier.fit(x_train, y_train)"""
+    resultLogit = maxProb.process_logit('Nelder-Mead')
+    # LnLogit = - resultLogit.fun
+    maxProb.get_result('logit')
+    # maxProb.get_test_result(x_test, y_test, 'logit')
 
     arClassifiers.append({
         'XTrain': x_train,
         'XTest': x_test,
         'YTrain': y_train,
         'YTest': y_test,
-        'Classifier': classifier
+        'Theta': resultProbit.x,
+        'maxProbObj': maxProb
     })
 
 datas = [('XTrain', 'YTrain'), ('XTest', 'YTest')]
@@ -214,23 +214,24 @@ arScores = {
 }
 for size in sizeValues:
     for i in range(len(datas)):
-        classifier = arClassifiers[size]['Classifier']
+        theta = arClassifiers[size]['Theta']
+
         xVal = arClassifiers[size][datas[i][0]]
         yVal = arClassifiers[size][datas[i][1]]
 
-        predicted_val = classifier.predict(xVal)
+        predicted_val = arClassifiers[size]['maxProbObj'].predict(xVal, 'probit')
 
-        predicted_proba = []
-        predicted_proba_ar = classifier.predict_proba(xVal)
-        for val in predicted_proba_ar:
-            predicted_proba.append(val[1])
+        predicted_proba = arClassifiers[size]['maxProbObj'].predict_proba(xVal, 'probit')
 
         scoring = Scoring(predicted_val, yVal, True)
         precision = scoring.precision()
         accuracy = scoring.accuracy()
         recall = scoring.recall()
         f1 = scoring.f1_score()
-        roc_auc = roc_auc_score(predicted_val, yVal)
+        if len(list(set(predicted_val))):
+            roc_auc = roc_auc_score(yVal, predicted_val)
+        else:
+            roc_auc = 0
         r2 = r2_score(yVal, predicted_proba)
         tf = scoring.TF
 
@@ -243,27 +244,6 @@ for size in sizeValues:
         arScores[names[i]]['weight'].append(len(xVal))
         arScores[names[i]]['allWeight'] += len(xVal)
 
-        """print('Precision для ' + names[i] + ' данных ', precision)
-        print('Accuracy для ' + names[i] + ' данных ', accuracy)
-        print('Recall для ' + names[i] + ' данных ', recall)
-        print('F1-score для ' + names[i] + ' данных ', f1)
-        print('AUC-score для ' + names[i] + ' данных ', roc_auc)
-        print('R^2 score для ' + names[i] + ' данных ', r2)
-        print('')
-    
-        arValues.append(str(precision))
-        arValues.append(str(accuracy))
-        arValues.append(str(recall))
-        arValues.append(str(f1))
-        arValues.append(str(roc_auc))
-        arValues.append(str(r2))
-        arValues.append(tf)"""
-
-# row_iter = Matrix.row(rowIndex)
-# for row_ind in range(len(arValues)):
-    # row_iter.write(row_ind, arValues[row_ind])
-
-# book.save("data/excel/matrixSeparated" + str(excludedCount) + ".xls")
 
 print(arScores)
 
@@ -285,3 +265,4 @@ for experimentType in arScores:
         mean /= scores['allWeight']
 
         print(f'{experimentType} {scoreName} = {mean}')
+

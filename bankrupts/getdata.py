@@ -6,7 +6,7 @@ import random
 
 
 def set_company_statuses(inns, all_data, columns, start=0, batch_size=10):
-    fileCommon = '../data/data_target_addit_info/data(14-15).csv'
+    fileCommon = '../data/data_target_addit_info/data(22-23).csv'
     results = []
     results_all = []
     browser = None
@@ -60,14 +60,14 @@ df = pd.read_csv(fileColumnsName, encoding='ISO-8859-1', engine='python')
 
 columns = list(df['Columns'])
 
-fileName = '../data/targeted/pre-companies-2018-1 (target)15.csv'
+fileName = '../data/targeted/pre-companies-2018-1 (target)22.csv'
 df = pd.read_csv(fileName, encoding='utf-8', engine='python', names=columns, header=None, delimiter=',')
 
 
 batchSize = 50
-countCycles = 10
+countCycles = 20
 
 for i in range(countCycles):
-    time.sleep(random.randint(2, 3))
-    set_company_statuses(df['INN'], df, columns, 1500 + i*batchSize, batchSize)
+    time.sleep(random.randint(5, 10))
+    set_company_statuses(df['INN'], df, columns, 0 + i*batchSize, batchSize)
 
