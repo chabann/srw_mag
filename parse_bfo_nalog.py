@@ -19,6 +19,7 @@ class FinancialCompanyData:
 
         self.companyData = {}
         self.additCompanyData = {}
+        self.detail_reports = []
 
         self.send_search_request()
 
@@ -33,8 +34,8 @@ class FinancialCompanyData:
         result = requests.get(url_search, headers=get_header())  # отправляем HTTP запрос
         try:
             take_company = json.loads(result.text)['content'][0]
-            legal_id = take_company['id']  # ToDo: пока что берем первую из найденных
-            self.send_reports_request(legal_id)
+            legal_id = take_company['id']  # пока что берем первую из найденных
+            self.detail_reports = self.send_reports_request(legal_id)
             self.additCompanyData['name'] = take_company['shortName']
             self.additCompanyData['okved_id'] = take_company['okved2']['id']
             self.additCompanyData['okved_name'] = take_company['okved2']['name']
@@ -48,9 +49,8 @@ class FinancialCompanyData:
 
         url_get_report = self.urlGetReport.replace('#COMPANY_ID#', str(legal_id))
         result = requests.get(url_get_report, headers=get_header())  # отправляем HTTP запрос
-        report_id = json.loads(result.text)[-1]['id']  # берем последний из найденных отчетов
 
-        self.send_detail_request(report_id)
+        return json.loads(result.text)
 
     def send_detail_request(self, report_id):
         """ Метод отправляет запрос на получение детальной финансовой отчетности по выбранному id отчета  """

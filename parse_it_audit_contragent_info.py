@@ -15,13 +15,14 @@ class ParseData:
         CHROME_PATH = r'C:/Program Files/Google/Chrome/Application/chrome.exe'
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+        # chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
         chrome_options.binary_location = CHROME_PATH
 
         if browser is not None:
             self.browser = browser
         else:
             self.browser = webdriver.Chrome(executable_path=self.path_to_chromedriver, options=chrome_options)
+            # self.browser = webdriver.Chrome(options=chrome_options)
 
         self.linkMain = 'https://www.audit-it.ru/buh_otchet/'
 
@@ -30,8 +31,6 @@ class ParseData:
 
         self.linkDetailBO = self.get_detail_link(fields)
         self.linkDetailCheck = self.get_detail_bo()
-
-        # self.check_company_status()
 
     def get_fields(self):
         self.browser.get(self.linkMain)
@@ -42,7 +41,7 @@ class ParseData:
 
         for field in field_blocks:
             field_names.append(field.get_attribute('name'))
-            if field.location['x'] != -9770:
+            if field.location['x'] != -9999:
                 field.send_keys(self.inn)
         session_id = self.browser.find_elements_by_css_selector('input[name=form_session_id]')
         return field_names
@@ -127,10 +126,4 @@ class ParseData:
         except NoSuchElementException:
             return None
         return element
-
-
-inn = '2612009733'
-
-result = ParseData(inn).check_company_status()
-# print(result)
 

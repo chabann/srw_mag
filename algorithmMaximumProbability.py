@@ -26,8 +26,8 @@ class AlgorithmMaximumProbability:
         res_logit = optimize.minimize(self.f_logit, self.a0, method=method,
                                       tol=1e-6, options={'disp': True, 'maxiter': 500})
 
-        print('Logit:')
-        print(res_logit.x)
+        # print('Logit:')
+        # print(res_logit.x)
 
         self.res_logit = res_logit
 
@@ -43,7 +43,7 @@ class AlgorithmMaximumProbability:
         mu = - theta[1] / theta[0]
         sigma = 1 / theta[0]
 
-        print(f'{method_type} mu: {mu} sigma: {sigma}')
+        # print(f'{method_type} mu: {mu} sigma: {sigma}')
 
         yi = []
         for i in range(self.example_number):
@@ -139,8 +139,8 @@ class AlgorithmMaximumProbability:
         res_probit = optimize.minimize(self.f_probit, self.a0, method=method,
                                        tol=1e-6, options={'disp': True, 'maxiter': 500})
 
-        print('Probit:')
-        print(res_probit.x)
+        # print('Probit:')
+        # print(res_probit.x)
 
         self.res_probit = res_probit
 

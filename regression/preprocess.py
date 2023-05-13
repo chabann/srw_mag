@@ -12,8 +12,7 @@ class PreprocessParseDataToUse:
         self.data_file = data_file
         self.target_file = target_file
 
-        self.columnsToDrop = ['None', 'Name', 'OKPO Code', 'OKOPF Code', 'OKFS Code', 'INN',
-                              'StatusText', 'StatusComment', 'People']
+        self.columnsToDrop = ['None', 'Name', 'OKPO Code', 'OKOPF Code', 'OKFS Code', 'People']
         self.moneyColumns = [
             '1110', '1120', '1130', '1140', '1150', '1160', '1170', '1180', '1190', '1100', '1210',
             '1220', '1230', '1240', '1250', '1260', '1200', '1600', '1310', '1320', '1340', '1350',
@@ -31,7 +30,7 @@ class PreprocessParseDataToUse:
         ]
         self.df = None
 
-    def preprocess(self):
+    def read_file(self):
         dfColumns = pd.read_csv(self.columns_file, encoding='ISO-8859-1', engine='python')
         columns = list(dfColumns['Columns'])
 
@@ -42,11 +41,15 @@ class PreprocessParseDataToUse:
 
         self.df.drop(self.columnsToDrop, inplace=True, axis=1)
 
+    def preprocess(self):
+        self.read_file()
+
         self.from_years_to_codes()
-        self.delete_empty()
+        # self.delete_empty()  #
         self.prepare_old()
-        self.prepare_okved()
-        self.set_values_size()
+        # self.prepare_okved()  #
+        # self.set_values_size()  #
+        self.set_when_bankrupt()
 
     def prepare_okved(self):
         for index, row in self.df.iterrows():
@@ -65,7 +68,7 @@ class PreprocessParseDataToUse:
     def prepare_old(self):
         for index, row in self.df.iterrows():
             year = row['Old']
-            if year is None:
+            if (year is None) or (str(year) == 'nan'):
                 self.df.loc[index, 'Old'] = 0
             else:
                 years = re.finditer('[0-9]+ ', year)
@@ -81,6 +84,24 @@ class PreprocessParseDataToUse:
                     order += 1
 
                 self.df.loc[index, 'Old'] = old
+
+    def set_when_bankrupt(self):
+        for index, row in self.df.iterrows():
+            status_text = row['StatusText']
+            if status_text == 'действующая':
+                self.df.loc[index, 'DateLiquid'] = ''
+            elif status_text == 'ликвидирована':
+                status_comment = row['StatusComment']
+
+                date_liquid = status_comment.replace('Организация ликвидирована ', '').split('.')[-2]
+                self.df.loc[index, 'DateLiquid'] = date_liquid
+            else:
+                self.df.drop(index, inplace=True)
+
+        self.df.drop('StatusText', inplace=True, axis=1)
+        self.df.drop('StatusComment', inplace=True, axis=1)
+
+        self.df.dropna(inplace=True)
 
     def from_years_to_codes(self):
         """
@@ -111,6 +132,7 @@ class PreprocessParseDataToUse:
                     self.df.drop(col, inplace=True, axis=1)
 
     def delete_empty(self):
+        indexes_to_drop = []
         for index, row in self.df.iterrows():
             isEmpty = True
             isNan = True
@@ -120,9 +142,12 @@ class PreprocessParseDataToUse:
                 if row[col] != 0:
                     isEmpty = False
             if ((row['Label'] != 0) & (row['Label'] != 1)) | isEmpty | isNan:
-                self.df.drop(index, inplace=True)
+                indexes_to_drop.append(index)
 
-        self.df.dropna(inplace=True)
+        for index in indexes_to_drop:
+            self.df.drop(index, inplace=True)
+
+        # self.df.dropna(inplace=True)
 
     def set_values_size(self):
         """
@@ -155,6 +180,6 @@ class PreprocessParseDataToUse:
         written_df.to_csv(self.target_file, index=False, header=False)
 
 
-preprocessing = PreprocessParseDataToUse('data/columns_all.csv', 'data/data(16-17).csv', 'data/data_prepare.csv')
+preprocessing = PreprocessParseDataToUse('data/columns_all.csv', 'data/data_2012_targeted_3.csv', 'data/data_hovanov_new2.csv')
 preprocessing.preprocess()
-preprocessing.write('data/columns.csv')
+preprocessing.write('data/columns_to_hovanov.csv')
