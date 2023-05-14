@@ -376,7 +376,7 @@ class CheckTimeStay:
         columns = ['inn', 'Label', 'Old', 'Type', 'group_1_2013', 'group_1_2014', 'group_1_2015', 'group_1_2016',
                    'group_1_2017', 'group_1_2018']
 
-        model_name = 'models/new_4_test-2_tree_accuracy_0.989_precision_0.986_years_All.sav'
+        model_name = 'final_model(All).sav'
         df = pd.read_csv(self.target_filename, encoding='utf-8', engine='python', names=columns,
                          header=None, delimiter=',', on_bad_lines='skip')
 
